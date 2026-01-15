@@ -5,12 +5,20 @@ import TrendChart from '../components/TrendChart';
 
 const Dashboard = () => {
     const [trends, setTrends] = useState([]);
+    const [stats, setStats] = useState({ total_papers: 0, total_authors: 0, total_topics: 0 });
 
     useEffect(() => {
+        // Fetch Trends
         fetch('http://localhost:8000/api/trends')
             .then(res => res.json())
             .then(data => setTrends(data))
-            .catch(err => console.error(err));
+            .catch(err => console.error("Error fetching trends:", err));
+
+        // Fetch Stats
+        fetch('http://localhost:8000/api/stats')
+            .then(res => res.json())
+            .then(data => setStats(data))
+            .catch(err => console.error("Error fetching stats:", err));
     }, []);
 
     return (
@@ -19,7 +27,7 @@ const Dashboard = () => {
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end' }}>
                 <div>
                     <h1 className="header-title">Research Intelligence</h1>
-                    <p className="header-subtitle">Tracking <span style={{ color: 'var(--primary)' }}>12,890</span> papers across AI & BioMed</p>
+                    <p className="header-subtitle">Tracking <span style={{ color: 'var(--primary)' }}>{stats.total_papers.toLocaleString()}</span> papers across AI & BioMed</p>
                 </div>
                 <div style={{ position: 'relative', width: '300px' }}>
                     <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />

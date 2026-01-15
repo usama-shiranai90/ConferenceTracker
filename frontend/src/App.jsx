@@ -1,11 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Network, FileText, Users, Activity, Settings } from 'lucide-react';
+import { LayoutDashboard, Network as NetworkIcon, FileText, Users, Activity, Settings, User } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Topics from './pages/Topics';
 import Papers from './pages/Papers';
 import Authors from './pages/Authors';
 import Network from './pages/Network';
+import Profile from './pages/Profile';
 import './index.css';
 
 const SidebarItem = ({ icon: Icon, label, path }) => {
@@ -56,10 +57,11 @@ const Layout = ({ children }) => {
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
           <SidebarItem icon={LayoutDashboard} label="Dashboard" path="/" />
+          <SidebarItem icon={User} label="My Profile" path="/profile" />
           <SidebarItem icon={Activity} label="Topics & Trends" path="/topics" />
           <SidebarItem icon={FileText} label="Papers" path="/papers" />
           <SidebarItem icon={Users} label="Authors" path="/authors" />
-          <SidebarItem icon={Network} label="Network Graph" path="/network" />
+          <SidebarItem icon={NetworkIcon} label="Network Graph" path="/network" />
         </nav>
 
         <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
@@ -81,6 +83,7 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/topics" element={<Topics />} />
           <Route path="/papers" element={<Papers />} />
           <Route path="/authors" element={<Authors />} />

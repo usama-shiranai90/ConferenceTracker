@@ -5,6 +5,10 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import date
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 # Import DB and Services
 from database import init_db, get_db, Paper, Author, SessionLocal
@@ -130,6 +134,109 @@ def get_authors(db: Session = Depends(get_db)):
             influence_score=0.0 # Placeholder
         ) for a in sorted_authors
     ]
+
+@app.get("/api/stats")
+def get_stats(db: Session = Depends(get_db)):
+    """
+    Get dashboard hero metrics.
+    """
+    total_papers = db.query(Paper).count()
+    total_authors = db.query(Author).count()
+    # Estimate topics from unique categories for now, until Topic Model is fully trained and saving to a dedicated Topic table
+    # or use the logic from get_trends
+    unique_categories = db.query(Paper.categories).distinct().count()
+    
+    return {
+        "total_papers": total_papers,
+        "total_authors": total_authors,
+        "total_topics": unique_categories
+    }
+
+from services.profile_service import get_profile, update_profile, analyze_profile
+
+# ... existing code ...
+
+class ProfileDTO(BaseModel):
+    name: str = ""
+    title: str = ""
+    proposal: str = ""
+
+@app.get("/api/profile")
+def read_profile(db: Session = Depends(get_db)):
+    profile = get_profile(db)
+    if not profile:
+        return {"name": "", "title": "", "proposal": "", "trajectory": "", "suggested_conferences": [], "suggested_papers": []}
+    
+    import json
+    return {
+        "name": profile.name,
+        "title": profile.title,
+        "proposal": profile.proposal,
+        "trajectory": profile.trajectory,
+        "suggested_conferences": json.loads(profile.suggested_conferences) if profile.suggested_conferences else [],
+        "suggested_papers": json.loads(profile.suggested_papers) if profile.suggested_papers else []
+    }
+
+@app.post("/api/profile")
+def save_profile(dto: ProfileDTO, db: Session = Depends(get_db)):
+    profile = update_profile(db, dto.name, dto.title, dto.proposal)
+    return {"status": "success", "id": profile.id}
+
+@app.post("/api/profile/analyze")
+def trigger_analysis(db: Session = Depends(get_db)):
+    profile = get_profile(db)
+    if not profile:
+        return {"error": "Profile not found"}
+    
+    updated_profile = analyze_profile(db, profile.id)
+    import json
+    return {
+        "trajectory": updated_profile.trajectory,
+        "suggested_conferences": json.loads(updated_profile.suggested_conferences) if updated_profile.suggested_conferences else [],
+        "suggested_papers": json.loads(updated_profile.suggested_papers) if updated_profile.suggested_papers else []
+    }
+
+# ============================================================================
+# RESEARCH DISCOVERY ENDPOINTS
+# ============================================================================
+from services.discovery_service import (
+    search_papers, get_topic_clusters, get_research_insights,
+    get_recommended_papers, get_trend_analysis
+)
+
+class SearchQuery(BaseModel):
+    query: str
+    limit: int = 20
+
+@app.post("/api/search")
+def api_search_papers(body: SearchQuery, db: Session = Depends(get_db)):
+    """Semantic search for papers based on query."""
+    results = search_papers(db, body.query, body.limit)
+    return {"results": results, "count": len(results)}
+
+@app.get("/api/topics/clusters")
+def api_topic_clusters(db: Session = Depends(get_db)):
+    """Get topic clusters with paper counts and samples."""
+    clusters = get_topic_clusters(db)
+    return {"topics": clusters}
+
+@app.get("/api/research/insights")
+def api_research_insights(db: Session = Depends(get_db)):
+    """Get AI-powered research insights based on collected data and user profile."""
+    insights = get_research_insights(db)
+    return insights
+
+@app.get("/api/research/recommended")
+def api_recommended_papers(db: Session = Depends(get_db)):
+    """Get papers recommended for the user based on their profile."""
+    papers = get_recommended_papers(db)
+    return {"papers": papers}
+
+@app.get("/api/research/trends")
+def api_trend_analysis(db: Session = Depends(get_db)):
+    """Get publication trend analysis over time."""
+    analysis = get_trend_analysis(db)
+    return analysis
 
 if __name__ == "__main__":
     import uvicorn

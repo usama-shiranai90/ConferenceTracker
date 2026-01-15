@@ -25,7 +25,12 @@ class PubMedCollector:
         # Constructing query
         start_date = (datetime.now() - timedelta(days=days_back)).strftime("%Y/%m/%d")
         # PubMed query syntax
-        query = '(("machine learning" OR "deep learning" OR "artificial intelligence") AND ("medicine" OR "medical" OR "clinical"))'
+        # Expanded for User's specific interests: Medication, Prescription, Error, etc.
+        core_ai = '("machine learning" OR "deep learning" OR "artificial intelligence" OR "large language model" OR "LLM" OR "RAG")'
+        domain = '("medicine" OR "medical" OR "clinical" OR "healthcare")'
+        specifics = '("medication" OR "prescription" OR "drug" OR "pharmac*" OR "medication error" OR "longitudinal" OR "time series")'
+        
+        query = f'({core_ai} AND {domain} AND {specifics})'
         query += f' AND ("{start_date}"[Date - Publication] : "3000"[Date - Publication])'
 
         logger.info(f"Fetching PubMed papers with query: {query}")

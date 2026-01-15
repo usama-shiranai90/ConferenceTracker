@@ -20,3 +20,4 @@ ruptures
 statsmodels
 networkx
 python-louvain
+python-dotenv

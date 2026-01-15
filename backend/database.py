@@ -52,6 +52,19 @@ class Author(Base):
     normalized_name = Column(String, index=True)
     papers = relationship("Paper", secondary=paper_authors, back_populates="authors")
 
+class UserProfile(Base):
+    __tablename__ = "user_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=True)
+    title = Column(String, nullable=True) # Research Title
+    proposal = Column(Text, nullable=True) # Description/Proposal
+    
+    # Storing analysis results as JSON string or Text is fine for SQLite
+    trajectory = Column(Text, nullable=True) 
+    suggested_conferences = Column(Text, nullable=True) # JSON or comma separated
+    suggested_papers = Column(Text, nullable=True) # JSON string of recommended papers from analysis
+
 def init_db():
     Base.metadata.create_all(bind=engine)
 
